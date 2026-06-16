@@ -1,59 +1,58 @@
-name: Build and Publish Docker Image
+  name: Build and Publish Docker Image
 
-on:
-  push:
-    branches:
-      - main
+  on:
+    push:
+      branches:
+        - main
 
-permissions:
-  contents: read
-  packages: write
+  permissions:
+    contents: read
+    packages: write
 
-env:
-  IMAGE_NAME: docker-flask
-  IMAGE_TAG: 1.0.0
+  env:
+    IMAGE_NAME: docker-flask
+    IMAGE_TAG: 1.0.0
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+  jobs:
+    build:
+      runs-on: ubuntu-latest
 
-    steps:
-      - name: Descargar Código
-        uses: actions/checkout@v4
+      steps:
+        - name: Descargar Código
+          uses: actions/checkout@v4
 
-      - name: Convertir usuario a minúsculas
-        run: |
-          echo "LOWER_REPO=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-      
-      - name: Construir la imagen de Docker
-        run: |
-          docker build -t ghcr.io/19ramirez/docker-flask:1.0.0 .
-
-      - name: Login en GitHub Container Registry
-        run: |
-          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u 19Ramirez --password-stdin
-
-      - name: Publicar la imagen
-        run: |
-          docker push ghcr.io/19ramirez/docker-flask:1.0.0
-      
-      - name: Mostrar variables (solo locales,no secretos)
-        run: |
-          echo "Probando conexion SSH con:"
-          echo "Host: ${{ secrets.VPS_HOST }}"
-          echo "Usuario: ${{ secrets.VPS_USER }}"
-          echo "Puerto: ${{ secrets.VPS_SHH_PORT }}"
-          echo "Password: ${{ secrets.VPS_PASSWORD }}"
+        - name: Convertir usuario a minúsculas
+          run: |
+            echo "LOWER_REPO=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
         
-      - name: Probar la shh en el vps
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_SHH_PORT }}
-          script: |
-            echo "Probando conexion ssh en el vps "
-            hostname
-            whoami
-            uptime
+        - name: Login en GitHub Container Registry (ANTES de construir)
+          run: |
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u 19Ramirez --password-stdin
+
+        - name: Construir la imagen de Docker
+          run: |
+            docker build -t ghcr.io/19ramirez/docker-flask:1.0.0 .
+
+        - name: Publicar la imagen
+          run: |
+            docker push ghcr.io/19ramirez/docker-flask:1.0.0
+        
+        - name: Mostrar variables (solo locales, no secretos)
+          run: |
+            echo "Probando conexion SSH con:"
+            echo "Host: ${{ secrets.VPS_HOST }}"
+            echo "Usuario: ${{ secrets.VPS_USER }}"
+            echo "Puerto: ${{ secrets.VPS_SHH_PORT }}"
+          
+        - name: Probar la SSH en el VPS
+          uses: appleboy/ssh-action@v1
+          with:
+            host: ${{ secrets.VPS_HOST }}
+            username: ${{ secrets.VPS_USER }}
+            password: ${{ secrets.VPS_PASSWORD }}
+            port: ${{ secrets.VPS_SHH_PORT }}
+            script: |
+              echo "Probando conexion ssh en el vps "
+              hostname
+              whoami
+              uptime
