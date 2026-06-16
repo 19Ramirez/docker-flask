@@ -25,9 +25,9 @@
           run: |
             echo "LOWER_REPO=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
         
-        - name: Login en GitHub Container Registry (ANTES de construir)
+        - name: Login en GitHub Container Registry
           run: |
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u 19ramirez --password-stdin
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u 19Ramirez --password-stdin
 
         - name: Construir la imagen de Docker
           run: |
