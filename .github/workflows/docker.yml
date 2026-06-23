@@ -60,7 +60,7 @@ jobs:
             docker pull ghcr.io/19ramirez/docker-flask:1.0.0
 
             echo "==> Desplegando stack calculadora..."
-            docker stack deploy -c stack.yml --with-registry-auth borrar
+            docker stack deploy -c stack.yml borrar
             
             echo "==> Verificando estado del servicio..."
             docker service ls | grep borrar
