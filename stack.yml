@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   app:
+    # Usamos la imagen que se construye en tu GitHub Container Registry
     image: ghcr.io/19ramirez/docker-flask:1.0.0
     networks:
       - traefik-public
@@ -14,17 +15,20 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        # Configuramos los routers y servicios usando tu cédula para evitar colisiones
-        - "traefik.http.routers.r1750002782.entrypoints=http"
-        - "traefik.http.routers.r1750002782.rule=Host(`1750002782.byronrm.com`)"
-        - "traefik.http.middlewares.m1750002782-https-redirect.redirectscheme.scheme=https"
-        - "traefik.http.routers.r1750002782.middlewares=m1750002782-https-redirect"
-        - "traefik.http.routers.r1750002782-secure.entrypoints=https"
-        - "traefik.http.routers.r1750002782-secure.rule=Host(`1750002782.byronrm.com`)"
-        - "traefik.http.routers.r1750002782-secure.tls=true"
-        - "traefik.http.routers.r1750002782-secure.tls.certresolver=http"
-        - "traefik.http.routers.r1750002782-secure.service=s1750002782"
-        - "traefik.http.services.s1750002782.loadbalancer.server.port=5000"
+        # Configuración exclusiva para tu subdominio calculadora (Usando tu apellido para que no choque)
+        - "traefik.http.routers.ramirez-calc-router.entrypoints=http"
+        - "traefik.http.routers.ramirez-calc-router.rule=Host(`calculadora.byronrm.com`)"
+        - "traefik.http.middlewares.ramirez-calc-redirect.redirectscheme.scheme=https"
+        - "traefik.http.routers.ramirez-calc-router.middlewares=ramirez-calc-redirect"
+        
+        - "traefik.http.routers.ramirez-calc-secure.entrypoints=https"
+        - "traefik.http.routers.ramirez-calc-secure.rule=Host(`calculadora.byronrm.com`)"
+        - "traefik.http.routers.ramirez-calc-secure.tls=true"
+        - "traefik.http.routers.ramirez-calc-secure.tls.certresolver=http"
+        - "traefik.http.routers.ramirez-calc-secure.service=ramirez-calc-service"
+        
+        # Traefik redirige el tráfico al puerto 5000 interno de tu Flask de forma segura
+        - "traefik.http.services.ramirez-calc-service.loadbalancer.server.port=5000"
         - "traefik.docker.network=traefik-public"
 
 networks:
