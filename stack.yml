@@ -1,11 +1,10 @@
 version: '3.8'
 
 services:
-  # Tu Aplicación Flask expuesta al subdominio con tu cédula
   app:
     image: ghcr.io/19ramirez/docker-flask:1.0.0
     networks:
-      - traefik-public   # Conexión directa a Traefik para tener salida a Internet con HTTPS
+      - traefik-public
     deploy:
       replicas: 1
       update_config:
@@ -16,17 +15,19 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.tecticom.entrypoints=http"
-        - "traefik.http.routers.tecticom.rule=Host(`1750002782.byronrm.com`)"
+        # AQUÍ AGREGAMOS AMBOS DOMINIOS SEPARADOS POR ||
+        - "traefik.http.routers.tecticom.rule=Host(`1750002782.byronrm.com`) || Host(`tecticom.byronrm.com`)"
         - "traefik.http.middlewares.tecticom-https-redirect.redirectscheme.scheme=https"
         - "traefik.http.routers.tecticom.middlewares=tecticom-https-redirect"
         - "traefik.http.routers.tecticom-secure.entrypoints=https"
-        - "traefik.http.routers.tecticom-secure.rule=Host(`1750002782.byronrm.com`)"
+        # AQUÍ TAMBIÉN REPETIMOS EN LA REGLA SEGURA (HTTPS)
+        - "traefik.http.routers.tecticom-secure.rule=Host(`1750002782.byronrm.com`) || Host(`tecticom.byronrm.com`)"
         - "traefik.http.routers.tecticom-secure.tls=true"
         - "traefik.http.routers.tecticom-secure.tls.certresolver=http"
         - "traefik.http.routers.tecticom-secure.service=tecticom"
-        - "traefik.http.services.tecticom.loadbalancer.server.port=5000" # El puerto de tu app.py (host='0.0.0.0', port=5000)
+        - "traefik.http.services.tecticom.loadbalancer.server.port=5000"
         - "traefik.docker.network=traefik-public"
 
 networks:
   traefik-public:
-    external: true     # La red pública que ya existe en el servidor de Contabo
+    external: true

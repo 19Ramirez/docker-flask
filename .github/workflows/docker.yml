@@ -38,7 +38,6 @@ jobs:
         with:
           context: .
           push: true
-          # Usamos todo en minúsculas de forma estricta para evitar fallos en GHCR
           tags: ghcr.io/19ramirez/docker-flask:1.0.0
         
       - name: 📤 Pasar stack.yml al servidor (landinga)
@@ -49,7 +48,8 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_SSH_PORT }}
           source: "stack.yml"
-          target: "/home/${{ secrets.VPS_USER }}/landinga"
+          # Apunta dinámicamente a la carpeta de tu usuario de cédula
+          target: "~/landinga"
     
       - name: 🚀 Despliegue del servicio en Docker Swarm
         uses: appleboy/ssh-action@v1
