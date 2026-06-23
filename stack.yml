@@ -14,18 +14,17 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.tecticom.entrypoints=http"
-        # AQUÍ AGREGAMOS AMBOS DOMINIOS SEPARADOS POR ||
-        - "traefik.http.routers.tecticom.rule=Host(`1750002782.byronrm.com`) || Host(`tecticom.byronrm.com`)"
-        - "traefik.http.middlewares.tecticom-https-redirect.redirectscheme.scheme=https"
-        - "traefik.http.routers.tecticom.middlewares=tecticom-https-redirect"
-        - "traefik.http.routers.tecticom-secure.entrypoints=https"
-        # AQUÍ TAMBIÉN REPETIMOS EN LA REGLA SEGURA (HTTPS)
-        - "traefik.http.routers.tecticom-secure.rule=Host(`1750002782.byronrm.com`) || Host(`tecticom.byronrm.com`)"
-        - "traefik.http.routers.tecticom-secure.tls=true"
-        - "traefik.http.routers.tecticom-secure.tls.certresolver=http"
-        - "traefik.http.routers.tecticom-secure.service=tecticom"
-        - "traefik.http.services.tecticom.loadbalancer.server.port=5000"
+        # Configuramos los routers y servicios usando tu cédula para evitar colisiones
+        - "traefik.http.routers.r1750002782.entrypoints=http"
+        - "traefik.http.routers.r1750002782.rule=Host(`1750002782.byronrm.com`)"
+        - "traefik.http.middlewares.m1750002782-https-redirect.redirectscheme.scheme=https"
+        - "traefik.http.routers.r1750002782.middlewares=m1750002782-https-redirect"
+        - "traefik.http.routers.r1750002782-secure.entrypoints=https"
+        - "traefik.http.routers.r1750002782-secure.rule=Host(`1750002782.byronrm.com`)"
+        - "traefik.http.routers.r1750002782-secure.tls=true"
+        - "traefik.http.routers.r1750002782-secure.tls.certresolver=http"
+        - "traefik.http.routers.r1750002782-secure.service=s1750002782"
+        - "traefik.http.services.s1750002782.loadbalancer.server.port=5000"
         - "traefik.docker.network=traefik-public"
 
 networks:
