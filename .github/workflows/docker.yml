@@ -1,67 +1,88 @@
-  name: Build and Publish Docker Image
+name: Build and Publish Docker Image
 
-  on:
-    push:
-      branches:
-        - main
+on:
+  push:
+    branches:
+      - main
 
-  permissions:
-    contents: read
-    packages: write
+permissions:
+  contents: read
+  packages: write
 
-  env:
-    IMAGE_NAME: docker-flask
-    IMAGE_TAG: 1.0.0
+env:
+  IMAGE_NAME: docker-flask
+  IMAGE_TAG: 1.0.0
 
-  jobs:
-    build:
-      runs-on: ubuntu-latest
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-      steps:
-        - name: Descargar Código
-          uses: actions/checkout@v4
+    steps:
+      - name: Descargar Código
+        uses: actions/checkout@v4
 
-        - name: Convertir usuario a minúsculas
-          run: |
-            echo "LOWER_REPO=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+      - name: Convertir usuario a minúsculas
+        run: |
+          echo "LOWER_REPO=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+      
+      - name: Login en GitHub Container Registry
+        run: |
+          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u 19Ramirez --password-stdin
+
+      - name: Construir la imagen de Docker
+        run: |
+          docker build -t ghcr.io/19ramirez/francisco:1.0.0 .
+
+      - name: Publicar la imagen
+        run: |
+          docker push ghcr.io/19ramirez/francisco:1.0.0
+      
+      - name: Mostrar variables (solo locales, no secretos)
+        run: |
+          echo "Probando conexion SSH con:"
+          echo "Host: ${{ secrets.VPS_HOST }}"
+          echo "Usuario: ${{ secrets.VPS_USER }}"
+          echo "Puerto: ${{ secrets.VPS_SSH_PORT }}"
         
-        - name: Login en GitHub Container Registry
-          run: |
-            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u 19Ramirez --password-stdin
+      - name: Probar la SSH en el VPS
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            echo "Probando conexion ssh en el vps "
+            touch quintoa.txt
 
-        - name: Construir la imagen de Docker
-          run: |
-            docker build -t ghcr.io/19ramirez/docker-flask:1.0.0 .
+      - name: Pasar archivos desde git al VPS
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          source: "stack.yml,Makefile"
+          target: "/home/${{ secrets.VPS_USER }}/landinga"
 
-        - name: Publicar la imagen
-          run: |
-            docker push ghcr.io/19ramirez/docker-flask:1.0.0
-        
-        - name: Mostrar variables (solo locales, no secretos)
-          run: |
-            echo "Probando conexion SSH con:"
-            echo "Host: ${{ secrets.VPS_HOST }}"
-            echo "Usuario: ${{ secrets.VPS_USER }}"
-            echo "Puerto: ${{ secrets.VPS_SSH_PORT }}"
-          
-        - name: Probar la SSH en el VPS
-          uses: appleboy/ssh-action@v1
-          with:
-            host: ${{ secrets.VPS_HOST }}
-            username: ${{ secrets.VPS_USER }}
-            password: ${{ secrets.VPS_PASSWORD }}
-            port: ${{ secrets.VPS_SSH_PORT }}
-            script: |
-              echo "Probando conexion ssh en el vps "
-              touch quintoa.txt
+      - name: Despliegue de los servicios
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_SSH_PORT }}
+          script: |
+            echo "✅ Desplegando servicios"        
+            cd ~/landinga
 
+            # Paso 1 descagar la imagen 
+            echo "==> descargando la imagen del GHCR"
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker pull ghcr.io/19ramirez/francisco:1.0.0
 
-        - name: Pasar archivos desde git al VPS
-          uses: appleboy/scp-action@v1
-          with:
-            host: ${{ secrets.VPS_HOST }}
-            username: ${{ secrets.VPS_USER }}
-            password: ${{ secrets.VPS_PASSWORD }}
-            port: ${{ secrets.VPS_SSH_PORT }}
-            source: "stack.yml,Makefile"
-            target: "/home/${{ secrets.VPS_USER }}/landinga"
+            #Paso 3 de
+            echo "==> Desplegando stack..."
+            docker stack deploy -c stack.yml borrar
+
+            docker ps
