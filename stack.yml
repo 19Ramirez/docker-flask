@@ -1,13 +1,11 @@
-version: '3.9'
+version: '3.8'
 
 services:
-  tecticom:
+  # Tu Aplicación Flask expuesta al subdominio con tu cédula
+  app:
     image: ghcr.io/19ramirez/docker-flask:1.0.0
-    build:
-      context: .
-      dockerfile: Dockerfile
     networks:
-      - traefik-public
+      - traefik-public   # Conexión directa a Traefik para tener salida a Internet con HTTPS
     deploy:
       replicas: 1
       update_config:
@@ -17,18 +15,18 @@ services:
         condition: on-failure
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.docker-flask:1.0.0.entrypoints=http"
-        - "traefik.http.routers.docker-flask:1.0.0.rule=Host(`docker-flask.byronrm.com`)"
-        - "traefik.http.middlewares.docker-flask:1.0.0-https-redirect.redirectscheme.scheme=https"
-        - "traefik.http.routers.docker-flask:1.0.0.middlewares=docker-flask:1.0.0-https-redirect"
-        - "traefik.http.routers.docker-flask:1.0.0-secure.entrypoints=https"
-        - "traefik.http.routers.docker-flask:1.0.0-secure.rule=Host(`docker-flask.byronrm.com`)"
-        - "traefik.http.routers.docker-flask:1.0.0-secure.tls=true"
-        - "traefik.http.routers.docker-flask:1.0.0-secure.tls.certresolver=http"
-        - "traefik.http.routers.docker-flask:1.0.0-secure.service=docker-flask:1.0.0"
-        - "traefik.http.services.docker-flask:1.0.0.loadbalancer.server.port=5000"
+        - "traefik.http.routers.tecticom.entrypoints=http"
+        - "traefik.http.routers.tecticom.rule=Host(`1750002782.byronrm.com`)"
+        - "traefik.http.middlewares.tecticom-https-redirect.redirectscheme.scheme=https"
+        - "traefik.http.routers.tecticom.middlewares=tecticom-https-redirect"
+        - "traefik.http.routers.tecticom-secure.entrypoints=https"
+        - "traefik.http.routers.tecticom-secure.rule=Host(`1750002782.byronrm.com`)"
+        - "traefik.http.routers.tecticom-secure.tls=true"
+        - "traefik.http.routers.tecticom-secure.tls.certresolver=http"
+        - "traefik.http.routers.tecticom-secure.service=tecticom"
+        - "traefik.http.services.tecticom.loadbalancer.server.port=5000" # El puerto de tu app.py (host='0.0.0.0', port=5000)
         - "traefik.docker.network=traefik-public"
 
 networks:
   traefik-public:
-    external: true
+    external: true     # La red pública que ya existe en el servidor de Contabo
